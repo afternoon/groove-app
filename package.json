@@ -7,12 +7,15 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "tsc -b && vite build && firebase deploy"
   },
   "dependencies": {
+    "@types/react-router-dom": "^5.3.3",
     "firebase": "^12.2.1",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.8.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
