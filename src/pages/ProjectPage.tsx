@@ -58,12 +58,12 @@ const ProjectPage: React.FC = () => {
   return (
     <div className="min-h-screen w-screen bg-gray-950 text-white">
       <header className="w-screen fixed bg-gray-950">
-        <div className="flex p-2">
-          <div className="flex-none w-1/4 space-x-1">
-            <PlayIcon className="h-5 w-5 cursor-pointer hover:text-white inline-block" aria-label="Play" />
-            <StopIcon className="h-5 w-5 cursor-pointer hover:text-white inline-block" aria-label="Stop" />
+        <div className="flex pb-1 pt-2 px-2">
+          <div className="flex-none w-1/4 space-x-1">            
+            <PlayIcon className="h-6 w-6  -mt-1 cursor-pointer hover:text-white inline-block" aria-label="Play" />
+            <StopIcon className="h-6 w-6  -mt-1 cursor-pointer hover:text-white inline-block" aria-label="Stop" />
             <input
-              className="bg-gray-800 text-white border-none w-16 ml-4 px-1 py-0.5 focus:outline-none"
+              className="bg-gray-800 text-white border-none w-16 ml-4 px-2 py-1 focus:outline-none"
               type="number"
               defaultValue={project.latestSnapshot?.content?.tempo || 120}
               aria-label="Tempo"
@@ -74,7 +74,7 @@ const ProjectPage: React.FC = () => {
           </div>
           <div className="flex-none w-1/4 text-right flex justify-end">
             <button
-                className="flex items-center space-x-1 text-sm bg-gray-800 hover:bg-gray-700 text-white h-9 px-3 p-0 -mt-1 transition-colors rounded cursor-pointer"
+                className="flex items-center space-x-1 text-sm bg-gray-800 hover:bg-gray-700 text-white h-8 px-3 p-0 transition-colors rounded cursor-pointer"
                 aria-label="Share Project">
               <UsersIcon className="h-4 w-4" />
               <span>Share</span>
