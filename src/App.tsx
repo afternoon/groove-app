@@ -2,9 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
 import DashboardPage from "./pages/DashboardPage";
+import ProjectPage from "./pages/ProjectPage";
 import ProtectedRoute from "./components/ProtectedRoute";
-
-import "./App.css";
 
 function App() {
   return (
@@ -19,12 +18,17 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/projects/:id"
+          element={
+            <ProtectedRoute>
+              <ProjectPage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   );
 }
 
 export default App;
-
-
-
