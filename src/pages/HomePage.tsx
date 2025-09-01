@@ -2,6 +2,9 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebaseConfig";
+import { UserIcon } from "@heroicons/react/24/solid";
+
+import "./HomePage.css";
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,12 +28,15 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
+    <div className="hero">
       <h1>Groove</h1>
-      <p>Your collaborative browser-based music studio.</p>
-      <button onClick={handleLogin} style={{ padding: "10px 20px", fontSize: "1.2em", cursor: "pointer" }}>
-        Log in with Google
-      </button>
+      <p>Your collaborative, AI-assisted, browser-based music studio.</p>
+      <p style={{ marginTop: "50px", padding: "0 300px" }}>
+        <button onClick={handleLogin}>
+          <UserIcon style={{ height: "20px", width: "20px" }} />
+          <span>Log in with Google</span>
+        </button>
+      </p>
     </div>
   );
 };

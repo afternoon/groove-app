@@ -1,0 +1,75 @@
+/*
+
++----------------------------------------------------------------------------------+
+| Title                             > []                             [140] [Share] |
++----------------------------------------------------------------------------------+
+|              |                                                  |                |
+|              |                                                  |                |
+|              |                                                  |                |
+|              |                                                  |                |
+|              |                                                  |                |
+|              |                                                  |                |
+|              |                                                  |                |
+|              |                                                  |                |
+|              |                                                  |                |
+|              |                                                  |                |
+|              |                                                  |                |
+|              |                                                  |                |
+|              +--------------------------------------------------+                |
+|              |                                                  |                |
+|              |                                                  |                |
+|              |                                                  |                |
+|              |                                                  |                |
++----------------------------------------------------------------------------------+
+
+*/
+
+.project {
+    --size-divider: 5px;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: var(--size-divider);
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: 32px 1fr 250px;
+    gap: var(--size-divider);
+
+    header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .workspace, .sounds, .browser, .assistant {
+        background-color: var(--color-background-secondary);
+    }
+
+    .browser, .assistant {
+        display: none;
+    }
+
+    h1 {
+        font-size: var(--font-size-base);
+        font-weight: 400;
+        margin: 0 0 0 5px;
+    }
+
+    header {
+        .transport-controls {
+            padding-top: var(--size-divider);
+        }
+
+        .project-settings {
+            display: flex;
+            align-items: center;
+            gap: var(--size-divider);
+        }
+
+        button {
+            border-radius: 0;
+            height: 28px;
+            padding: 0 10px
+        }
+    }
+}

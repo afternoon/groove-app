@@ -3,7 +3,9 @@ import { useParams } from "react-router-dom";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import type { Project } from "../types";
+
 import { PlayIcon, StopIcon, UsersIcon } from "@heroicons/react/24/solid";
+import "./ProjectPage.css";
 
 const ProjectPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -48,54 +50,42 @@ const ProjectPage: React.FC = () => {
   }
 
   if (error) {
-    return <div className="text-red-500">{error}</div>;
+    return <div style={{ color: "red" }}>{error}</div>;
   }
 
   if (!project) {
     return <div>Project not found.</div>;
   }
 
+  const projectName = project.name || "Untitled Project";
+
   return (
-    <div className="min-h-screen w-screen bg-gray-950 text-white">
-      <header className="w-screen fixed bg-gray-950">
-        <div className="flex pb-1 pt-2 px-2">
-          <div className="flex-none w-1/4 space-x-1">            
-            <PlayIcon className="h-6 w-6  -mt-1 cursor-pointer hover:text-white inline-block" aria-label="Play" />
-            <StopIcon className="h-6 w-6  -mt-1 cursor-pointer hover:text-white inline-block" aria-label="Stop" />
-            <input
-              className="bg-gray-800 text-white border-none w-16 ml-4 px-2 py-1 focus:outline-none"
+    <div className="project">
+      <header>
+        <div className="project-name"><h1>{projectName}</h1></div>
+        <div className="transport-controls">
+          <PlayIcon style={{ color: "white", width: "26px", height: "26px", cursor: "pointer", display: "inline-block" }} aria-label="Play" />
+          <StopIcon style={{ color: "white", width: "26px", height: "26px", cursor: "pointer", display: "inline-block" }} aria-label="Stop" />
+        </div>
+        <div className="project-settings">
+          <input
+              style={{ width: "44px" }}
               type="number"
               defaultValue={project.latestSnapshot?.content?.tempo || 120}
-              aria-label="Tempo"
-            />
-          </div>
-          <div className="flex-auto w-1/2 text-center text-gray-300">
-            <h1 className="text-lg font-normal py-1">{project.name || "Untitled Project"}</h1>
-          </div>
-          <div className="flex-none w-1/4 text-right flex justify-end">
-            <button
-                className="flex items-center space-x-1 text-sm bg-gray-800 hover:bg-gray-700 text-white h-8 px-3 p-0 transition-colors rounded cursor-pointer"
-                aria-label="Share Project">
-              <UsersIcon className="h-4 w-4" />
-              <span>Share</span>
-            </button>
-          </div>
+              aria-label="Tempo"/>
+          <button
+              style={{ display: "flex", alignItems: "center", gap: "5px" }}
+              aria-label="Share Project">
+            <UsersIcon style={{ color: "white", width: "16px", height: "16px", cursor: "pointer", display: "inline-block" }} aria-label="Share" />
+            <span>Share</span>
+          </button>
         </div>
-        <div className="bg-gray-900 p-1 text-xs text-normal text-white">Workspace</div>
       </header>
 
-      <main className="pt-8 mb-80">
-        <div className="flex-grow w-full p-4">
-          <p>Workspace</p>
-        </div>
-      </main>
-
-      <footer className="fixed bottom-0 left-0 right-0 h-64">
-        <h2 className="bg-gray-900 p-1 text-xs text-normal text-white">Sound</h2>
-        <div className="">
-          {/* Sound pane content will go here */}
-        </div>
-      </footer>
+      <section className="workspace"></section>
+      <section className="sounds"></section>
+      <section className="browser"></section>      
+      <section className="assistant"></section>
     </div>
   );
 };

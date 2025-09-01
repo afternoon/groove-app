@@ -5,6 +5,9 @@ import { signOut, type User } from "firebase/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import since from "since-time-ago";
 import type { Project } from "../types";
+import { UserIcon } from "@heroicons/react/24/solid";
+
+import "./DashboardPage.css";
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -59,18 +62,18 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="text-center mt-12">
+    <div className="dashboard">
       <h1>{user.displayName}'s Grooves</h1>
-      <div className="mt-5">
+      <div>
         {loading && <p>Loading projects...</p>}
-        {error && <p className="text-red-500">{error}</p>}
+        {error && <p style={{ color: "darkred" }}>{error}</p>}
         {!loading && !error && projects.length === 0 && <p>No projects found.</p>}
         {!loading && !error && projects.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-5 mt-5 text-white">
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "5px", marginTop: "50px", color: "white" }}>
             {projects.map((project) => (
-              <div key={project.id} className="border border-gray-300 p-4 rounded-lg w-[512px] text-left cursor-pointer"
-                  onClick={() => navigate(`/project/${project.id}`)}>
-                <h3 className="m-0">{project.name || "Untitled Project"}</h3>
+              <div key={project.id} style={{ border: "1px solid gray", padding: "10px", borderRadius: "5px", width: "512px", textAlign: "left", cursor: "pointer" }}
+                  onClick={() => navigate(`/projects/${project.id}`)}>
+                <h2 style={{ margin: 0 }}>{project.name || "Untitled Project"}</h2>
                 {project.createdAt && 
                   <div>Created {since(project.createdAt.toDate())}</div>
                 }
@@ -82,9 +85,12 @@ const DashboardPage: React.FC = () => {
           </div>
         )}
 
-        <button onClick={handleLogout} className="px-5 py-2 mt-5 cursor-pointer">
-          Log Out
-        </button>
+        <p style={{ marginTop: "50px", padding: "0 340px" }}>
+          <button onClick={handleLogout}>
+            <UserIcon style={{ height: "20px", width: "20px" }} />
+            <span>Log out</span>
+          </button>
+        </p>
       </div>
     </div>
   );
