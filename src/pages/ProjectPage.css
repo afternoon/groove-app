@@ -41,6 +41,8 @@
     gap: var(--size-divider);
 
     header {
+        grid-area: header;
+
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -51,8 +53,6 @@
 
         h1 {
             font-size: var(--font-size-base);
-            font-weight: 400;
-            margin: 0 0 0 5px;
         }
     
         .transport-controls {
@@ -63,6 +63,7 @@
             display: flex;
             align-items: center;
             gap: var(--size-divider);
+            justify-content: flex-end;
         }
 
         button {
@@ -78,10 +79,6 @@
         padding: var(--size-divider);
     }
    
-    header {
-        grid-area: header;
-    }
-
     .workspace {
         grid-area: workspace;
     }
