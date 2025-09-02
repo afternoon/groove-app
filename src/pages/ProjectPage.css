@@ -32,6 +32,11 @@
     padding: var(--size-divider);
     box-sizing: border-box;
     display: grid;
+    grid-template-areas:
+        "header header header"
+        "browser workspace assistant"
+        "browser sound assistant";
+    grid-template-columns: 2fr 12fr 4fr;
     grid-template-rows: 32px 1fr 250px;
     gap: var(--size-divider);
 
@@ -39,23 +44,17 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-    }
 
-    .workspace, .sounds, .browser, .assistant {
-        background-color: var(--color-background-secondary);
-    }
+        .project-name, .project-settings {
+            width: 20%;
+        }
 
-    .browser, .assistant {
-        display: none;
-    }
-
-    h1 {
-        font-size: var(--font-size-base);
-        font-weight: 400;
-        margin: 0 0 0 5px;
-    }
-
-    header {
+        h1 {
+            font-size: var(--font-size-base);
+            font-weight: 400;
+            margin: 0 0 0 5px;
+        }
+    
         .transport-controls {
             padding-top: var(--size-divider);
         }
@@ -71,5 +70,31 @@
             height: 28px;
             padding: 0 10px
         }
+    }
+
+    .workspace, .sound, .browser, .assistant {
+        background-color: var(--color-background-secondary);
+        box-sizing: border-box;
+        padding: var(--size-divider);
+    }
+   
+    header {
+        grid-area: header;
+    }
+
+    .workspace {
+        grid-area: workspace;
+    }
+
+    .sound {
+        grid-area: sound;
+    }
+
+    .browser {
+        grid-area: browser;
+    }
+
+    .assistant {
+        grid-area: assistant;
     }
 }

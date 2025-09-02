@@ -82,10 +82,10 @@ const ProjectPage: React.FC = () => {
         </div>
       </header>
 
-      <section className="workspace"></section>
-      <section className="sounds"></section>
-      <section className="browser"></section>      
-      <section className="assistant"></section>
+      <section className="workspace">Workspace</section>
+      <section className="sound">Sound</section>
+      <section className="browser">Browser</section>      
+      <section className="assistant">Assistant</section>
     </div>
   );
 };
