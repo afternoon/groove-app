@@ -22,3 +22,6 @@ firebase-debug.log*
 
 # Editor directories and files
 .DS_Store
+
+# Misc config
+.claude
