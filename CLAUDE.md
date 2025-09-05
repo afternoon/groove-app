@@ -51,3 +51,11 @@ Firebase configuration is loaded from environment variables prefixed with `VITE_
 - ESLint with React and TypeScript rules
 - Source maps enabled in production builds
 - Firebase hosting with SPA routing support
+
+## Coding Conventions
+
+- Use TypeScript for type safety
+- Follow React best practices (functional components, hooks)
+- Use CSS modules for component-specific styles
+- Avoid trailing whitespace
+- Prefer " to ' for strings
