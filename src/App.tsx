@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
+import { analytics } from "./firebaseConfig";
+
 import HomePage from "./pages/HomePage";
 import DashboardPage from "./pages/DashboardPage";
 import ProjectPage from "./pages/ProjectPage";
