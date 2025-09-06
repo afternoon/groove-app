@@ -26,7 +26,7 @@ export const mockProject: Project = {
           volume: 0.8,
           isMuted: false,
           isSolo: false,
-          sampleUrl: "https://example.com/samples/kick.wav"
+          sampleUrl: "/samples/house/loops/kick/28x-drm01-125.wav"
         },
         {
           id: "track-2",
@@ -35,16 +35,16 @@ export const mockProject: Project = {
           volume: 0.6,
           isMuted: false,
           isSolo: false,
-          sampleUrl: "https://example.com/samples/hihat.wav"
+          sampleUrl: "/samples/house/loops/hats/28k-drm05-125.wav"
         },
         {
           id: "track-3",
           name: "Bassline",
           instrument: Instrument.clip,
           volume: 0.7,
-          isMuted: true,
+          isMuted: false,
           isSolo: false,
-          sampleUrl: "https://example.com/samples/bass.wav"
+          sampleUrl: "/samples/house/loops/bass/FIH_122_C_Synth_Bass_D.wav"
         }
       ],
       sections: [

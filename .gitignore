@@ -25,3 +25,6 @@ firebase-debug.log*
 
 # Misc config
 .claude
+
+# Big fat blobs
+public/samples
