@@ -69,6 +69,7 @@ const ProjectPage: React.FC = () => {
   }
 
   const projectName = project.name || "Untitled Project";
+  const content = project.latestSnapshot?.content;
 
   return (
     <div className="project">
@@ -82,7 +83,7 @@ const ProjectPage: React.FC = () => {
           <input
               style={{ width: "44px" }}
               type="number"
-              defaultValue={project.latestSnapshot?.content?.tempo || 120}
+              defaultValue={content?.tempo || 120}
               aria-label="Tempo"/>
           <button
               style={{ display: "flex", alignItems: "center", gap: "5px" }}
@@ -96,17 +97,17 @@ const ProjectPage: React.FC = () => {
       <section
         className="workspace"
         style={{
-          '--num-tracks': project.latestSnapshot?.content?.tracks?.length || 0,
-          '--num-sections': project.latestSnapshot?.content?.sections?.length || 0
+          '--num-tracks': content?.tracks?.length || 0,
+          '--num-sections': content?.sections?.length || 0
         } as React.CSSProperties}
       >
-        {project.latestSnapshot?.content && (
+        {content && (
           <div className="timeline-container">
             <div className="tracks-grid">
               <div className="track-header-spacer timeline-spacer" style={{gridColumn: 1, gridRow: 1}}>
               </div>
 
-              {project.latestSnapshot.content.tracks?.map((track, trackIndex) => (
+              {content.tracks?.map((track) => (
                 <React.Fragment key={track.id}>
                   <div className="track-header">
                     <div className="track-name">{track.name}</div>
@@ -135,7 +136,7 @@ const ProjectPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {project.latestSnapshot.content.sections?.map((section, sectionIndex) => (
+                  {content.sections?.map((section) => (
                     <div key={`${track.id}-${section.id}`} className="section-block">
                       {section.enabledTrackIds.includes(track.id) && (
                         <div className="active-block"></div>
@@ -145,7 +146,7 @@ const ProjectPage: React.FC = () => {
                 </React.Fragment>
               ))}
 
-              {project.latestSnapshot.content.sections?.map((section, index) => (
+              {content.sections?.map((section, index) => (
                 <div key={section.id} className="timeline-section" style={{
                   gridColumn: index + 2,
                   gridRow: 1
