@@ -51,6 +51,7 @@ Firebase configuration is loaded from environment variables prefixed with `VITE_
 - ESLint with React and TypeScript rules
 - Source maps enabled in production builds
 - Firebase hosting with SPA routing support
+- GitHub Actions is used to build and test changes and deploy them to Firebase Hosting
 
 ## Coding Conventions
 
