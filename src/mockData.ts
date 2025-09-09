@@ -24,7 +24,7 @@ export const mockProject: Project = {
           instrument: {
             type: "clip" as const,
             sampleUrl: "/samples/house/loops/kick/28x-drm01-125.wav",
-            sampleTempo: 62.5
+            sampleTempo: 125
           },
           volume: 0.8,
           isMuted: false,
