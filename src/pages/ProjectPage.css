@@ -26,6 +26,7 @@
 
 .project {
     --size-divider: 5px;
+
     width: 100vw;
     height: 100vh;
     margin: 0;
@@ -89,162 +90,162 @@
         height: 100%;
         overflow: auto;
         position: relative;
-    }
 
-    .tracks-grid {
-        display: grid;
-        grid-template-columns: 200px repeat(var(--num-sections), 400px);
-        grid-template-rows: 40px repeat(var(--num-tracks), 100px);
-        min-height: 100%;
-    }
+        --timeline-height: 30px;
+        --track-height: 70px;
 
-    .timeline-spacer {
-        position: sticky;
-        top: 0;
-        left: 0;
-        width: 200px;
-        height: 40px;
-        z-index: 20;
-        background-color: var(--color-background-secondary);
-        border-right: 1px solid #444;
-        border-bottom: 1px solid #444;
-    }
+        --track-width: 200px;
+        --section-width: 200px;
 
-    .timeline-section {
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        background-color: var(--color-background-secondary);
-        border-left: 1px solid #444;
-        border-bottom: 1px solid #444;
-        display: flex;
-        align-items: center;
-        padding: 0 10px;
-    }
+        .tracks-grid {
+            display: grid;
+            grid-template-columns: var(--track-width) repeat(var(--num-sections), var(--section-width));
+            grid-template-rows: var(--timeline-height) repeat(var(--num-tracks), var(--track-height));
+            min-height: 100%;
+        }
 
-    .bar-numbers {
-        display: flex;
-        width: 100%;
-        justify-content: space-between;
-    }
+        .timeline-spacer {
+            position: sticky;
+            top: 0;
+            left: 0;
+            width: var(--track-width);
+            height: var(--timeline-height);
+            z-index: 20;
+            background-color: var(--color-background-secondary);
+            border-bottom: 1px solid #333;
+        }
 
-    .bar-number {
-        font-size: 12px;
-        color: #888;
-        font-weight: bold;
-    }
+        .timeline-section {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: var(--color-background-secondary);
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #333;
+        }
 
-    /* Track Header - Sticky to left */
-    .track-header {
-        position: sticky;
-        left: 0;
-        z-index: 5;
-        background-color: var(--color-background-secondary);
-        border-right: 1px solid #444;
-        border-bottom: 1px solid #333;
-        padding: 10px;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
+        .bar-numbers {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+        }
 
-    .track-name {
-        font-weight: bold;
-        font-size: 14px;
-        margin-bottom: 10px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+        .bar-number {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            width: calc(var(--section-width) / 4);
+        }
 
-    .track-controls {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
+        /* Track Header - Sticky to left */
+        .track-header {
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            background-color: var(--color-background-secondary);
+            border-bottom: 1px solid #333;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
 
-    .volume-control {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 5px;
-    }
+        .track-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
 
-    .volume-slider {
-        width: 60px;
-        height: 4px;
-        background: #333;
-        border-radius: 2px;
-        outline: none;
-        -webkit-appearance: none;
-    }
+        .track-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
 
-    .volume-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 12px;
-        height: 12px;
-        background: #fff;
-        border-radius: 50%;
-        cursor: pointer;
-    }
+        .volume-control {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
 
-    .track-buttons {
-        display: flex;
-        gap: 5px;
-        justify-content: center;
-    }
+        .volume-slider {
+            width: 60px;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
 
-    .track-button {
-        width: 24px;
-        height: 24px;
-        border: 1px solid #666;
-        background: #333;
-        color: #ccc;
-        font-size: 12px;
-        font-weight: bold;
-        cursor: pointer;
-        border-radius: 2px;
-    }
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
 
-    .track-button:hover {
-        background: #444;
-    }
+        .track-buttons {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
 
-    .track-button.active {
-        background: #666;
-        color: #fff;
-    }
+        .track-button {
+            width: 24px;
+            height: 24px;
+            border: 1px solid #666;
+            background: #333;
+            color: #ccc;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 2px;
+        }
 
-    .mute-button.active {
-        background: #f44336;
-        border-color: #f44336;
-    }
+        .track-button:hover {
+            background: #444;
+        }
 
-    .solo-button.active {
-        background: #ffeb3b;
-        border-color: #ffeb3b;
-        color: #333;
-    }
+        .track-button.active {
+            background: #666;
+            color: #fff;
+        }
 
-    /* Section Blocks */
-    .section-block {
-        border-left: 1px solid #444;
-        border-bottom: 1px solid #333;
-        position: relative;
-        padding: 10px;
-        box-sizing: border-box;
-    }
+        .mute-button.active {
+            background: #f44336;
+            border-color: #f44336;
+        }
 
-    .active-block {
-        width: 100%;
-        height: 100%;
-        border-radius: 4px;
-        background-color: #4CAF50;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        .solo-button.active {
+            background: #ffeb3b;
+            border-color: #ffeb3b;
+            color: #333;
+        }
+
+        /* Section Blocks */
+        .section-block {
+            border-left: 1px solid var(--color-background-secondary);
+            border-bottom: 1px solid var(--color-background-secondary);
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .active-block {
+            width: 100%;
+            height: 100%;
+            border-radius: 3px;
+            background-color: #4CAF50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     }
 
     .sound {
