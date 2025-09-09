@@ -58,5 +58,7 @@ Firebase configuration is loaded from environment variables prefixed with `VITE_
 - Use TypeScript for type safety
 - Follow React best practices (functional components, hooks)
 - Use CSS modules for component-specific styles
-- Avoid trailing whitespace
+- Do not add trailing whitespace to the end of lines
 - Prefer " to ' for strings
+- Generally we shouldn't need comments, if we keep methods small and names descriptive
+- React components should be small and simple, split into smaller components as needed
