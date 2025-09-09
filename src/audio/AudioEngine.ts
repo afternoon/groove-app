@@ -11,15 +11,11 @@ export class AudioEngine {
   private scheduledEvents: Tone.ToneEvent<string>[] = [];
 
   constructor() {
-    // Set up Tone.Transport
-    Tone.Transport.bpm.value = 120;
-
-    // Set up playhead update callback
+    this.setupAudioScheduler();
     this.setupPlayheadUpdater();
   }
 
   async initialize(): Promise<void> {
-    // Start Tone.js audio context if not already started
     if (Tone.context.state !== "running") {
       await Tone.start();
     }
@@ -32,22 +28,12 @@ export class AudioEngine {
       return;
     }
 
-    // Set tempo
     if (content.tempo) {
       Tone.Transport.bpm.value = content.tempo;
     }
 
-    // Clear existing instruments and events
-    this.clearAudioOnly();
-
-    // Load instruments for each track
     if (content.tracks) {
       await this.loadTracks(content.tracks);
-    }
-
-    // Schedule sections
-    if (content.sections && content.tracks) {
-      this.scheduleSections(content.sections, content.tracks);
     }
   }
 
@@ -74,39 +60,8 @@ export class AudioEngine {
     await Promise.all(loadPromises);
   }
 
-  private scheduleSections(sections: Section[], tracks: Track[]): void {
-    let currentBar = 0;
-
-    sections.forEach((section) => {
-      const sectionStartTime = `${currentBar}:0:0`;
-
-      // For each enabled track in this section
-      section.enabledTrackIds.forEach((trackId) => {
-        const track = tracks.find(t => t.id === trackId);
-        const instrument = this.instruments.get(trackId);
-
-        if (track && instrument && !track.isMuted && (!this.hasSoloTracks(tracks) || track.isSolo)) {
-          // Schedule the clip to play at the start of this section
-          const event = new Tone.ToneEvent((time) => {
-            instrument.start(time);
-          }, sectionStartTime);
-
-          event.start();
-          this.scheduledEvents.push(event);
-        }
-      });
-
-      // Each section is 4 bars
-      currentBar += 4;
-    });
-
-    // Set transport loop to the total length
-    Tone.Transport.loopEnd = `${currentBar}:0:0`;
-    Tone.Transport.loop = true;
-  }
-
-  private hasSoloTracks(tracks: Track[]): boolean {
-    return tracks.some(track => track.isSolo);
+  public setPlayheadCallback(callback: PlayheadUpdateCallback): void {
+    this.playheadCallback = callback;
   }
 
   private setupPlayheadUpdater(): void {
@@ -123,63 +78,205 @@ export class AudioEngine {
     }, "16n"); // Update every 16th note for smooth movement
   }
 
-  play(): void {
-    Tone.Transport.start();
+  private setupAudioScheduler(): void {
+    Tone.Transport.scheduleRepeat((time) => {
+        this.scheduleUpcoming(time);
+    }, "16n");
   }
 
-  stop(): void {
-    Tone.Transport.stop();
+  scheduleUpcoming(_currentTime) {
+    const currentPosition = Tone.Transport.position;
+    const currentBars = this.positionToBars(currentPosition);
+    const currentBarInt = Math.floor(currentBars);
+
+    // Schedule the next window when we cross bar boundaries
+    if (currentBarInt >= this.nextScheduleTime) {
+      this.clearOldEvents(currentBarInt);
+      this.scheduleWindow(currentBarInt);
+      this.nextScheduleTime = currentBarInt + this.lookAheadBars;
+      console.log(`Bar boundary crossed - scheduled from bar ${currentBarInt}`);
+    }
   }
 
-  pause(): void {
-    Tone.Transport.pause();
+  scheduleWindow(fromBar) {
+    const toBar = fromBar + this.lookAheadBars;
+    console.log(`Scheduling window: bars ${fromBar} to ${toBar}`);
+
+    for (let bar = Math.floor(fromBar); bar < Math.ceil(toBar); bar++) {
+      // Handle loop boundaries
+      let actualBar = bar;
+      if (this.loopEnabled) {
+        if (bar >= this.loopEnd) {
+          actualBar = this.loopStart + ((bar - this.loopStart) % (this.loopEnd - this.loopStart));
+        }
+      }
+
+      this.scheduleBar(bar, actualBar);
+    }
   }
 
-  seekTo(position: string): void {
+  scheduleBar(schedulingBar, contentBar) {
+    Object.entries(this.tracks).forEach(([trackName, track]) => {
+      // Check if this track should play at this bar
+      if (contentBar % track.loopLength === 0) {
+        this.scheduleTrackForBar(trackName, track, schedulingBar, contentBar);
+      }
+    });
+  }
+
+  scheduleTrackForBar(trackName, track, schedulingBar, contentBar) {
+    const barTime = `${schedulingBar}:0:0`;
+
+    if (track.type === "stepSequencer") {
+      track.pattern.forEach((step, index) => {
+        if (step) {
+          const stepTime = `${schedulingBar}:${Math.floor(index / 4)}:${index % 4}`;
+          const eventId = `${trackName}-${schedulingBar}-${index}`;
+
+          if (!this.scheduledEvents.has(eventId)) {
+            Tone.Transport.schedule((time) => {
+              track.instrument.triggerAttackRelease(track.note, "16n", time);
+            }, stepTime);
+            this.scheduledEvents.add(eventId);
+          }
+        }
+      });
+    } else if (track.type === "clip") {
+      // Trigger notes every beat for the duration of the loop
+      for (let beat = 0; beat < 4 * track.loopLength; beat++) {
+        const noteIndex = beat % track.notes.length;
+        const stepTime = `${schedulingBar + Math.floor(beat / 4)}:${beat % 4}:0`;
+        const eventId = `${trackName}-${schedulingBar}-${beat}`;
+        const instrument = this.instruments.get(trackId);
+
+        if (!this.scheduledEvents.has(eventId)) {
+          Tone.Transport.schedule((time) => {
+            instrument.start(time);
+          }, stepTime);
+          this.scheduledEvents.add(eventId);
+        }
+      }
+    } else if (track.type === "sequenced") {
+      // Trigger notes every half beat for melodic patterns
+      for (let step = 0; step < 8 * track.loopLength; step++) {
+        const noteIndex = step % track.notes.length;
+        const stepTime = `${schedulingBar + Math.floor(step / 8)}:${Math.floor((step % 8) / 2)}:${(step % 2) * 2}`;
+        const eventId = `${trackName}-${schedulingBar}-${step}`;
+
+        if (!this.scheduledEvents.has(eventId)) {
+          Tone.Transport.schedule((time) => {
+            track.instrument.triggerAttackRelease(track.notes[noteIndex], "8n", time);
+          }, stepTime);
+          this.scheduledEvents.add(eventId);
+        }
+      }
+    }
+  }
+
+  clearOldEvents(currentBar) {
+    // Remove events that are more than 1 bar behind current position
+    const cutoffBar = currentBar - 1;
+    const eventsToRemove = [];
+
+    this.scheduledEvents.forEach(eventId => {
+      const barFromId = parseInt(eventId.split("-")[1]);
+      if (barFromId < cutoffBar) {
+        eventsToRemove.push(eventId);
+      }
+    });
+
+    eventsToRemove.forEach(eventId => {
+      this.scheduledEvents.delete(eventId);
+    });
+
+    if (eventsToRemove.length > 0) {
+      console.log(`Cleaned up ${eventsToRemove.length} old events`);
+    }
+  }
+
+  positionToBars(position) {
+    // Convert Tone.js position (bars:beats:sixteenths) to decimal bars
+    const parts = position.split(":");
+    const bars = parseInt(parts[0]);
+    const beats = parseInt(parts[1]);
+    const sixteenths = parseInt(parts[2]);
+    return bars + beats/4 + sixteenths/16;
+  }
+
+  barsToPosition(bars) {
+    const wholeBars = Math.floor(bars);
+    const remainder = bars - wholeBars;
+    const beats = Math.floor(remainder * 4);
+    const sixteenths = Math.floor((remainder * 4 - beats) * 4);
+    return `${wholeBars}:${beats}:${sixteenths}`;
+  }
+
+  play() {
+    if (!this.isPlaying) {
+      Tone.start();
+      this.isPlaying = true;
+
+      // Schedule initial window from current position
+      const currentBars = this.positionToBars(Tone.Transport.position);
+      this.scheduleWindow(currentBars);
+      this.nextScheduleTime = currentBars + this.lookAheadBars;
+
+      Tone.Transport.start();
+      console.log("Playback started");
+    }
+  }
+
+  pause() {
+    if (this.isPlaying) {
+      Tone.Transport.pause();
+      this.isPlaying = false;
+      console.log("Playback paused");
+    }
+  }
+
+  stop() {
+    if (this.isPlaying || Tone.Transport.state === "paused") {
+      Tone.Transport.stop();
+      Tone.Transport.cancel(); // Clear all scheduled events
+      this.scheduledEvents.clear();
+      this.nextScheduleTime = 0;
+      this.isPlaying = false;
+      console.log("Playback stopped, all events cleared");
+    }
+  }
+
+  jumpTo(bars, beats, sixteenths) {
+    const position = `${bars}:${beats}:${sixteenths}`;
+    const wasPlaying = this.isPlaying;
+
+    if (wasPlaying) {
+      this.stop();
+    }
+
     Tone.Transport.position = position;
+
+    if (wasPlaying) {
+      // If we were playing, restart from the new position
+      setTimeout(() => this.play(), 50);
+    }
+
+    console.log(`Jumped to position ${position}`);
   }
 
-  seekToBar(bar: number): void {
-    Tone.Transport.position = `${bar}:0:0`;
-  }
+  setLoop(enabled, startBar, endBar) {
+    this.loopEnabled = enabled;
+    this.loopStart = startBar;
+    this.loopEnd = endBar;
 
-  setPlayheadCallback(callback: PlayheadUpdateCallback): void {
-    this.playheadCallback = callback;
-  }
-
-  getIsPlaying(): boolean {
-    return Tone.Transport.state === "started";
-  }
-
-  getCurrentPosition(): string {
-    return Tone.Transport.position.toString();
-  }
-
-  setTempo(bpm: number): void {
-    Tone.Transport.bpm.value = bpm;
-  }
-
-  private clearAudio(): void {
-    // Stop transport and clear scheduled events
-    Tone.Transport.stop();
-    this.clearAudioOnly();
-  }
-
-  private clearAudioOnly(): void {
-    this.scheduledEvents.forEach(event => { event.dispose(); });
-    this.scheduledEvents = [];
-
-    this.instruments.forEach(instrument => { instrument.dispose(); });
-    this.instruments.clear();
+    if (enabled) {
+      console.log(`Loop enabled: bars ${startBar} to ${endBar}`);
+    } else {
+      console.log("Loop disabled");
+    }
   }
 
   private dbFromLinear(linear: number): number {
     // Convert linear volume (0-1) to decibels
     return linear === 0 ? -Infinity : 20 * Math.log10(linear);
-  }
-
-  dispose(): void {
-    this.clearAudio();
-    this.playheadCallback = null;
   }
 }
