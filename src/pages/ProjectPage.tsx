@@ -69,10 +69,9 @@ const ProjectPage: React.FC = () => {
       const initializeAudio = async () => {
         try {
           await audioEngine.initialize();
-          await audioEngine.loadProject(project);
-
-          audioEngine.setPlayheadCallback((_, bars, beats, sixteenths) => {
-            setPlayheadPosition({ bars, beats, sixteenths });
+          await audioEngine.setProject(project);
+          audioEngine.setPlayheadUpdateCallback((bars, beats, sixteenths) => {
+            setPlayheadPosition({bars, beats, sixteenths});
           });
         } catch (error) {
           console.error("Failed to initialize audio:", error);

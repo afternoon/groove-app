@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Timestamp } from "firebase/firestore";
 import type { Project } from "./types";
-import { Instrument } from "./types";
 
 // Mock Firestore Timestamp for testing
 const mockTimestamp = {
@@ -26,32 +25,38 @@ describe("Project Types", () => {
             {
               id: "track-1",
               name: "Kick Drum",
-              instrument: Instrument.clip,
+              instrument: {
+                type: "clip" as const,
+                sampleUrl: "https://example.com/samples/kick.wav",
+                sampleTempo: 125
+              },
               volume: 0.8,
               isMuted: false,
-              isSolo: false,
-              clipSampleUrl: "https://example.com/samples/kick.wav",
-              clipSampleTempo: 125
+              isSolo: false
             },
             {
               id: "track-2",
               name: "Hi-Hat",
-              instrument: Instrument.clip,
+              instrument: {
+                type: "clip" as const,
+                sampleUrl: "https://example.com/samples/hihat.wav",
+                sampleTempo: 125
+              },
               volume: 0.6,
               isMuted: false,
-              isSolo: false,
-              clipSampleUrl: "https://example.com/samples/hihat.wav",
-              clipSampleTempo: 125
+              isSolo: false
             },
             {
               id: "track-3",
               name: "Bass Line",
-              instrument: Instrument.clip,
+              instrument: {
+                type: "clip" as const,
+                sampleUrl: "https://example.com/samples/bass.wav",
+                sampleTempo: 122
+              },
               volume: 0.7,
               isMuted: true,
-              isSolo: false,
-              clipSampleUrl: "https://example.com/samples/bass.wav",
-              clipSampleTempo: 122
+              isSolo: false
             }
           ],
           sections: [
@@ -97,10 +102,13 @@ describe("Project Types", () => {
 
     const kickTrack = tracks?.[0];
     expect(kickTrack?.name).toBe("Kick Drum");
-    expect(kickTrack?.instrument).toBe(Instrument.clip);
+    expect(kickTrack?.instrument.type).toBe("clip");
+    if (kickTrack?.instrument.type === "clip") {
+      expect(kickTrack.instrument.sampleUrl).toBe("https://example.com/samples/kick.wav");
+      expect(kickTrack.instrument.sampleTempo).toBe(125);
+    }
     expect(kickTrack?.volume).toBe(0.8);
     expect(kickTrack?.isMuted).toBe(false);
-    expect(kickTrack?.clipSampleUrl).toBe("https://example.com/samples/kick.wav");
 
     const bassTrack = tracks?.[2];
     expect(bassTrack?.name).toBe("Bass Line");

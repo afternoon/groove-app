@@ -1,18 +1,20 @@
 import * as Tone from "tone";
-import type { Project, Track, Section } from "../types";
+import type { Project, Track, Section, ClipInstrument, SynthInstrument, SamplerInstrument } from "../types";
 
 export interface PlayheadUpdateCallback {
-  (position: string, bars: number, beats: number, sixteenths: number): void;
+  (bars: number, beats: number, sixteenths: number): void;
 }
 
 export class AudioEngine {
+  private project: Project | null = null;
+  private playheadUpdateCallback: PlayheadUpdateCallback | null = null;
+  private tracks: Track[] = [];
   private instruments: Map<string, Tone.Player> = new Map();
-  private playheadCallback: PlayheadUpdateCallback | null = null;
-  private scheduledEvents: Tone.ToneEvent<string>[] = [];
+  private isPlaying: boolean = false;
 
   constructor() {
-    this.setupAudioScheduler();
-    this.setupPlayheadUpdater();
+    this.schedulePlaybackHeadUpdates();
+    this.scheduleAudioEvents();
   }
 
   async initialize(): Promise<void> {
@@ -21,7 +23,8 @@ export class AudioEngine {
     }
   }
 
-  async loadProject(project: Project): Promise<void> {
+  async setProject(project: Project): Promise<void> {
+    this.project = project;
     const content = project.latestSnapshot?.content;
     if (!content) {
       throw new Error("Project has no content to load.");
@@ -33,23 +36,21 @@ export class AudioEngine {
     }
 
     if (content.tracks) {
-      await this.loadTracks(content.tracks);
+      await this.setTracks(content.tracks);
     }
   }
 
-  private async loadTracks(tracks: Track[]): Promise<void> {
+  private async setTracks(tracks: Track[]): Promise<void> {
+    this.tracks = tracks;
     const loadPromises = tracks
-      .filter(track => track.instrument === "clip" && track.clipSampleUrl)
+      .filter(track => track.instrument.type === "clip")
       .map(async (track) => {
         try {
-          const player = new Tone.Player(track.clipSampleUrl).toDestination();
-          player.volume.value = this.dbFromLinear(track.volume);
-
+          const clipInstrument = track.instrument as ClipInstrument;
+          const player = new Tone.Player(clipInstrument.sampleUrl).toDestination();
           await Tone.loaded();
 
-          player.playbackRate = track.clipSampleTempo
-            ? track.clipSampleTempo / Tone.Transport.bpm.value
-            : 1;
+          player.playbackRate = clipInstrument.sampleTempo / Tone.Transport.bpm.value;
 
           this.instruments.set(track.id, player);
         } catch (error) {
@@ -60,167 +61,103 @@ export class AudioEngine {
     await Promise.all(loadPromises);
   }
 
-  public setPlayheadCallback(callback: PlayheadUpdateCallback): void {
-    this.playheadCallback = callback;
+  public setPlayheadUpdateCallback(callback: PlayheadUpdateCallback): void {
+    this.playheadUpdateCallback = callback;
   }
 
-  private setupPlayheadUpdater(): void {
-    // Use Tone.Transport.scheduleRepeat for smooth playhead updates
+  private schedulePlaybackHeadUpdates(): void {
     Tone.Transport.scheduleRepeat((time) => {
-      if (this.playheadCallback) {
-        // Use Tone.Draw to ensure UI updates happen on the main thread
+      if (this.playheadUpdateCallback) {
         Tone.Draw.schedule(() => {
           const position = Tone.Transport.position.toString();
           const [bars, beats, sixteenths] = position.split(":").map(Number);
-          this.playheadCallback?.(position, bars, beats, sixteenths);
+          this.playheadUpdateCallback?.(bars, beats, sixteenths);
         }, time);
       }
-    }, "16n"); // Update every 16th note for smooth movement
-  }
-
-  private setupAudioScheduler(): void {
-    Tone.Transport.scheduleRepeat((time) => {
-        this.scheduleUpcoming(time);
     }, "16n");
   }
 
-  scheduleUpcoming(_currentTime) {
-    const currentPosition = Tone.Transport.position;
-    const currentBars = this.positionToBars(currentPosition);
-    const currentBarInt = Math.floor(currentBars);
+  private scheduleAudioEvents(): void {
+    Tone.Transport.scheduleRepeat((time) => {
+        this.scheduleNextBar(time);
+    }, "1m");
+  }
 
-    // Schedule the next window when we cross bar boundaries
-    if (currentBarInt >= this.nextScheduleTime) {
-      this.clearOldEvents(currentBarInt);
-      this.scheduleWindow(currentBarInt);
-      this.nextScheduleTime = currentBarInt + this.lookAheadBars;
-      console.log(`Bar boundary crossed - scheduled from bar ${currentBarInt}`);
+  scheduleNextBar(time: number) {
+    const position = Tone.Transport.position.toString();
+    const bar = position.split(":").map(Number)[0];
+    console.log(`Scheduling bar ${bar}, time ${time}`);
+
+    const currentSection = this.sectionAtBar(bar);
+    if (!currentSection) {
+      console.log(`No section found at bar ${bar}, song has ended`);
+      this.stop();
+      return;
+    }
+    console.log(`Current section: ${currentSection.name} (ID: ${currentSection.id})`);
+
+    this.tracks
+      .filter(track => currentSection.enabledTrackIds.includes(track.id))
+      .forEach(track => { this.scheduleTrack(track); });
+  }
+
+  sectionAtBar(bar: number): Section | null {
+    // For simplicity, assume sections are 4 bars long and sequential
+    if (!this.project) return null;
+
+    const sections = this.project?.latestSnapshot?.content?.sections;
+    return sections ? sections[Math.floor(bar / 4)] || null : null;
+  }
+
+  scheduleTrack(track: Track) {
+    switch (track.instrument.type) {
+      case "clip":
+        this.scheduleClipTrack(track);
+        break;
+      case "synth":
+      case "sampler":
+      default:
+        this.scheduleSequencedTrack(track);
     }
   }
 
-  scheduleWindow(fromBar) {
-    const toBar = fromBar + this.lookAheadBars;
-    console.log(`Scheduling window: bars ${fromBar} to ${toBar}`);
-
-    for (let bar = Math.floor(fromBar); bar < Math.ceil(toBar); bar++) {
-      // Handle loop boundaries
-      let actualBar = bar;
-      if (this.loopEnabled) {
-        if (bar >= this.loopEnd) {
-          actualBar = this.loopStart + ((bar - this.loopStart) % (this.loopEnd - this.loopStart));
-        }
-      }
-
-      this.scheduleBar(bar, actualBar);
+  scheduleClipTrack(track: Track) {
+    const instrument = this.instruments.get(track.id);
+    if (instrument) {
+      instrument.volume.value = this.dbFromLinear(track.volume);
+      instrument.playbackRate = (track.instrument as ClipInstrument).sampleTempo / Tone.Transport.bpm.value;
+      instrument.start();
     }
   }
 
-  scheduleBar(schedulingBar, contentBar) {
-    Object.entries(this.tracks).forEach(([trackName, track]) => {
-      // Check if this track should play at this bar
-      if (contentBar % track.loopLength === 0) {
-        this.scheduleTrackForBar(trackName, track, schedulingBar, contentBar);
-      }
-    });
-  }
+  scheduleSequencedTrack(track: Track) {
+    const instrumentConfig = track.instrument as SynthInstrument | SamplerInstrument;
+    const pattern = instrumentConfig.pattern;
+    if (!pattern || pattern.length === 0) {
+      return;
+    }
 
-  scheduleTrackForBar(trackName, track, schedulingBar, contentBar) {
-    const barTime = `${schedulingBar}:0:0`;
+    // loop over pattern until we have 16 steps
+    const barPattern = Array(16).fill(0).map((_, i) => pattern[i % pattern.length]);
+    const instrument = this.instruments.get(track.id);
 
-    if (track.type === "stepSequencer") {
-      track.pattern.forEach((step, index) => {
-        if (step) {
-          const stepTime = `${schedulingBar}:${Math.floor(index / 4)}:${index % 4}`;
-          const eventId = `${trackName}-${schedulingBar}-${index}`;
-
-          if (!this.scheduledEvents.has(eventId)) {
-            Tone.Transport.schedule((time) => {
-              track.instrument.triggerAttackRelease(track.note, "16n", time);
-            }, stepTime);
-            this.scheduledEvents.add(eventId);
-          }
-        }
-      });
-    } else if (track.type === "clip") {
-      // Trigger notes every beat for the duration of the loop
-      for (let beat = 0; beat < 4 * track.loopLength; beat++) {
-        const noteIndex = beat % track.notes.length;
-        const stepTime = `${schedulingBar + Math.floor(beat / 4)}:${beat % 4}:0`;
-        const eventId = `${trackName}-${schedulingBar}-${beat}`;
-        const instrument = this.instruments.get(trackId);
-
-        if (!this.scheduledEvents.has(eventId)) {
-          Tone.Transport.schedule((time) => {
+    barPattern.forEach((step, index) => {
+      if (step) {
+        const stepTime = `+${index}n`;
+        Tone.Transport.schedule((time) => {
+          if (instrument) {
+            instrument.volume.value = this.dbFromLinear(track.volume);
             instrument.start(time);
-          }, stepTime);
-          this.scheduledEvents.add(eventId);
-        }
-      }
-    } else if (track.type === "sequenced") {
-      // Trigger notes every half beat for melodic patterns
-      for (let step = 0; step < 8 * track.loopLength; step++) {
-        const noteIndex = step % track.notes.length;
-        const stepTime = `${schedulingBar + Math.floor(step / 8)}:${Math.floor((step % 8) / 2)}:${(step % 2) * 2}`;
-        const eventId = `${trackName}-${schedulingBar}-${step}`;
-
-        if (!this.scheduledEvents.has(eventId)) {
-          Tone.Transport.schedule((time) => {
-            track.instrument.triggerAttackRelease(track.notes[noteIndex], "8n", time);
-          }, stepTime);
-          this.scheduledEvents.add(eventId);
-        }
-      }
-    }
-  }
-
-  clearOldEvents(currentBar) {
-    // Remove events that are more than 1 bar behind current position
-    const cutoffBar = currentBar - 1;
-    const eventsToRemove = [];
-
-    this.scheduledEvents.forEach(eventId => {
-      const barFromId = parseInt(eventId.split("-")[1]);
-      if (barFromId < cutoffBar) {
-        eventsToRemove.push(eventId);
+          }
+        }, stepTime);
       }
     });
-
-    eventsToRemove.forEach(eventId => {
-      this.scheduledEvents.delete(eventId);
-    });
-
-    if (eventsToRemove.length > 0) {
-      console.log(`Cleaned up ${eventsToRemove.length} old events`);
-    }
-  }
-
-  positionToBars(position) {
-    // Convert Tone.js position (bars:beats:sixteenths) to decimal bars
-    const parts = position.split(":");
-    const bars = parseInt(parts[0]);
-    const beats = parseInt(parts[1]);
-    const sixteenths = parseInt(parts[2]);
-    return bars + beats/4 + sixteenths/16;
-  }
-
-  barsToPosition(bars) {
-    const wholeBars = Math.floor(bars);
-    const remainder = bars - wholeBars;
-    const beats = Math.floor(remainder * 4);
-    const sixteenths = Math.floor((remainder * 4 - beats) * 4);
-    return `${wholeBars}:${beats}:${sixteenths}`;
   }
 
   play() {
     if (!this.isPlaying) {
-      Tone.start();
       this.isPlaying = true;
-
-      // Schedule initial window from current position
-      const currentBars = this.positionToBars(Tone.Transport.position);
-      this.scheduleWindow(currentBars);
-      this.nextScheduleTime = currentBars + this.lookAheadBars;
-
+      Tone.start();
       Tone.Transport.start();
       console.log("Playback started");
     }
@@ -237,15 +174,13 @@ export class AudioEngine {
   stop() {
     if (this.isPlaying || Tone.Transport.state === "paused") {
       Tone.Transport.stop();
-      Tone.Transport.cancel(); // Clear all scheduled events
-      this.scheduledEvents.clear();
-      this.nextScheduleTime = 0;
+      Tone.Transport.cancel();
       this.isPlaying = false;
-      console.log("Playback stopped, all events cleared");
+      console.log("Playback stopped");
     }
   }
 
-  jumpTo(bars, beats, sixteenths) {
+  jumpTo(bars: number, beats: number, sixteenths: number): void {
     const position = `${bars}:${beats}:${sixteenths}`;
     const wasPlaying = this.isPlaying;
 
@@ -263,11 +198,7 @@ export class AudioEngine {
     console.log(`Jumped to position ${position}`);
   }
 
-  setLoop(enabled, startBar, endBar) {
-    this.loopEnabled = enabled;
-    this.loopStart = startBar;
-    this.loopEnd = endBar;
-
+  setLoop(enabled: boolean, startBar: number, endBar: number): void {
     if (enabled) {
       console.log(`Loop enabled: bars ${startBar} to ${endBar}`);
     } else {

@@ -1,6 +1,5 @@
 import { Timestamp } from "firebase/firestore";
 import type { Project } from "./types";
-import { Instrument } from "./types";
 
 // Mock Firestore Timestamp for development
 const mockTimestamp = {
@@ -22,32 +21,38 @@ export const mockProject: Project = {
         {
           id: "track-1",
           name: "Kick Drum",
-          instrument: Instrument.clip,
+          instrument: {
+            type: "clip" as const,
+            sampleUrl: "/samples/house/loops/kick/28x-drm01-125.wav",
+            sampleTempo: 62.5
+          },
           volume: 0.8,
           isMuted: false,
-          isSolo: false,
-          clipSampleUrl: "/samples/house/loops/kick/28x-drm01-125.wav",
-          clipSampleTempo: 62.5
+          isSolo: false
         },
         {
           id: "track-2",
           name: "Hi-Hat",
-          instrument: Instrument.clip,
+          instrument: {
+            type: "clip" as const,
+            sampleUrl: "/samples/house/loops/hats/28k-drm05-125.wav",
+            sampleTempo: 125
+          },
           volume: 0.6,
           isMuted: false,
-          isSolo: false,
-          clipSampleUrl: "/samples/house/loops/hats/28k-drm05-125.wav",
-          clipSampleTempo: 125
+          isSolo: false
         },
         {
           id: "track-3",
           name: "Bassline",
-          instrument: Instrument.clip,
+          instrument: {
+            type: "clip" as const,
+            sampleUrl: "/samples/house/loops/bass/FIH_122_C_Synth_Bass_D.wav",
+            sampleTempo: 122
+          },
           volume: 0.7,
           isMuted: false,
-          isSolo: false,
-          clipSampleUrl: "/samples/house/loops/bass/FIH_122_C_Synth_Bass_D.wav",
-          clipSampleTempo: 122
+          isSolo: false
         }
       ],
       sections: [

@@ -1,10 +1,42 @@
 import { type Timestamp } from "firebase/firestore";
 
-export const Instrument = {
-  clip: "clip"
-} as const;
+export interface ClipInstrument {
+  type: "clip";
+  sampleUrl: string;
+  sampleTempo: number; // in BPM
+}
 
-export type Instrument = typeof Instrument[keyof typeof Instrument];
+export interface Envelope {
+  attack: number; // in seconds
+  decay: number; // in seconds
+  sustain: number; // 0-1 level
+  release: number; // in seconds
+}
+
+export interface FilterConfig {
+  type: "lowpass" | "highpass" | "bandpass" | "notch";
+  filterCutoff: number; // in Hz
+  filterResonance: number; // Q factor
+}
+
+export interface SynthInstrument {
+  type: "synth";
+  oscillatorType: "sine" | "square" | "sawtooth" | "triangle";
+  envelope: Envelope;
+  filter: FilterConfig;
+  pattern: number[]; // e.g. [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+}
+
+export interface SamplerInstrument {
+  type: "sampler";
+  sampleUrl: string;
+  pitch: number; // in semitones
+  envelope: Envelope;
+  filter: FilterConfig;
+  pattern: number[]; // e.g. [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+}
+
+export type Instrument = ClipInstrument | SynthInstrument | SamplerInstrument;
 
 export interface Track {
   id: string;
@@ -13,9 +45,6 @@ export interface Track {
   isMuted: boolean;
   isSolo: boolean;
   instrument: Instrument;
-
-  clipSampleUrl?: string;
-  clipSampleTempo?: number;
 }
 
 export interface Section {
