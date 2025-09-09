@@ -17,7 +17,7 @@ export const mockProject: Project = {
   isPublic: false,
   latestSnapshot: {
     content: {
-      tempo: 128,
+      tempo: 125,
       tracks: [
         {
           id: "track-1",
@@ -26,7 +26,8 @@ export const mockProject: Project = {
           volume: 0.8,
           isMuted: false,
           isSolo: false,
-          sampleUrl: "/samples/house/loops/kick/28x-drm01-125.wav"
+          clipSampleUrl: "/samples/house/loops/kick/28x-drm01-125.wav",
+          clipSampleTempo: 62.5
         },
         {
           id: "track-2",
@@ -35,7 +36,8 @@ export const mockProject: Project = {
           volume: 0.6,
           isMuted: false,
           isSolo: false,
-          sampleUrl: "/samples/house/loops/hats/28k-drm05-125.wav"
+          clipSampleUrl: "/samples/house/loops/hats/28k-drm05-125.wav",
+          clipSampleTempo: 125
         },
         {
           id: "track-3",
@@ -44,7 +46,8 @@ export const mockProject: Project = {
           volume: 0.7,
           isMuted: false,
           isSolo: false,
-          sampleUrl: "/samples/house/loops/bass/FIH_122_C_Synth_Bass_D.wav"
+          clipSampleUrl: "/samples/house/loops/bass/FIH_122_C_Synth_Bass_D.wav",
+          clipSampleTempo: 122
         }
       ],
       sections: [

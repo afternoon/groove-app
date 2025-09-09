@@ -21,7 +21,7 @@ describe("Project Types", () => {
       isPublic: false,
       latestSnapshot: {
         content: {
-          tempo: 128,
+          tempo: 125,
           tracks: [
             {
               id: "track-1",
@@ -30,7 +30,8 @@ describe("Project Types", () => {
               volume: 0.8,
               isMuted: false,
               isSolo: false,
-              sampleUrl: "https://example.com/samples/kick.wav"
+              clipSampleUrl: "https://example.com/samples/kick.wav",
+              clipSampleTempo: 125
             },
             {
               id: "track-2",
@@ -39,7 +40,8 @@ describe("Project Types", () => {
               volume: 0.6,
               isMuted: false,
               isSolo: false,
-              sampleUrl: "https://example.com/samples/hihat.wav"
+              clipSampleUrl: "https://example.com/samples/hihat.wav",
+              clipSampleTempo: 125
             },
             {
               id: "track-3",
@@ -48,7 +50,8 @@ describe("Project Types", () => {
               volume: 0.7,
               isMuted: true,
               isSolo: false,
-              sampleUrl: "https://example.com/samples/bass.wav"
+              clipSampleUrl: "https://example.com/samples/bass.wav",
+              clipSampleTempo: 122
             }
           ],
           sections: [
@@ -85,7 +88,7 @@ describe("Project Types", () => {
     // Verify the project content
     const content = project.latestSnapshot?.content;
     expect(content).toBeDefined();
-    expect(content?.tempo).toBe(128);
+    expect(content?.tempo).toBe(125);
 
     // Verify tracks
     const tracks = content?.tracks;
@@ -97,7 +100,7 @@ describe("Project Types", () => {
     expect(kickTrack?.instrument).toBe(Instrument.clip);
     expect(kickTrack?.volume).toBe(0.8);
     expect(kickTrack?.isMuted).toBe(false);
-    expect(kickTrack?.sampleUrl).toBe("https://example.com/samples/kick.wav");
+    expect(kickTrack?.clipSampleUrl).toBe("https://example.com/samples/kick.wav");
 
     const bassTrack = tracks?.[2];
     expect(bassTrack?.name).toBe("Bass Line");
@@ -150,7 +153,7 @@ describe("Project Types", () => {
 
     const project: Project = emptyContentProject;
     const content = project.latestSnapshot?.content;
-    
+
     expect(content?.tempo).toBe(120);
     expect(content?.tracks).toBeUndefined();
     expect(content?.sections).toBeUndefined();

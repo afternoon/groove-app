@@ -9,11 +9,13 @@ export type Instrument = typeof Instrument[keyof typeof Instrument];
 export interface Track {
   id: string;
   name: string;
-  instrument: Instrument;
-  volume: number; // 0-1
+  volume: number;
   isMuted: boolean;
   isSolo: boolean;
-  sampleUrl: string;
+  instrument: Instrument;
+
+  clipSampleUrl?: string;
+  clipSampleTempo?: number;
 }
 
 export interface Section {

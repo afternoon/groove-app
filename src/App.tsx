@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import "./firebaseConfig";
 
+import { AudioProvider } from "./contexts/AudioContext.tsx";
+
 import HomePage from "./pages/HomePage";
 import DashboardPage from "./pages/DashboardPage";
 import ProjectPage from "./pages/ProjectPage";
@@ -24,7 +26,9 @@ function App() {
           path="/projects/:id"
           element={
             <ProtectedRoute>
-              <ProjectPage />
+              <AudioProvider>
+                <ProjectPage />
+              </AudioProvider>
             </ProtectedRoute>
           }
         />

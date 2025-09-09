@@ -4,15 +4,22 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import type { Project } from "../types";
 import { mockProject } from "../mockData";
+import { useAudio } from "../hooks/useAudio";
 
 import { PlayIcon, StopIcon, UsersIcon } from "@heroicons/react/24/solid";
+import { Playhead } from "../components/Playhead";
 import "./ProjectPage.css";
+
+const SECTION_LENGTH_BARS = 4;
 
 const ProjectPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { audioEngine } = useAudio();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [, setIsPlaying] = useState(false);
+  const [playheadPosition, setPlayheadPosition] = useState({ bars: 0, beats: 0, sixteenths: 0 });
 
   useEffect(() => {
     if (!id) {
@@ -56,6 +63,41 @@ const ProjectPage: React.FC = () => {
     return () => unsubscribe();
   }, [id]);
 
+  // Initialize AudioEngine and load project
+  useEffect(() => {
+    if (project) {
+      const initializeAudio = async () => {
+        try {
+          await audioEngine.initialize();
+          await audioEngine.loadProject(project);
+
+          audioEngine.setPlayheadCallback((_, bars, beats, sixteenths) => {
+            setPlayheadPosition({ bars, beats, sixteenths });
+          });
+        } catch (error) {
+          console.error("Failed to initialize audio:", error);
+        }
+      };
+
+      initializeAudio();
+    }
+  }, [project, audioEngine]);
+
+  const handlePlay = async () => {
+    try {
+      await audioEngine.initialize();
+      audioEngine.play();
+      setIsPlaying(true);
+    } catch (error) {
+      console.error("Failed to play:", error);
+    }
+  };
+
+  const handleStop = () => {
+    audioEngine.stop();
+    setIsPlaying(false);
+  };
+
   if (loading) {
     return <div>Loading project...</div>;
   }
@@ -76,8 +118,16 @@ const ProjectPage: React.FC = () => {
       <header>
         <div className="project-name"><h1>{projectName}</h1></div>
         <div className="transport-controls">
-          <PlayIcon style={{ color: "white", width: "26px", height: "26px", cursor: "pointer", display: "inline-block" }} aria-label="Play" />
-          <StopIcon style={{ color: "white", width: "26px", height: "26px", cursor: "pointer", display: "inline-block" }} aria-label="Stop" />
+          <PlayIcon
+            style={{ color: "white", width: "26px", height: "26px", cursor: "pointer", display: "inline-block" }}
+            aria-label="Play"
+            onClick={handlePlay}
+          />
+          <StopIcon
+            style={{ color: "white", width: "26px", height: "26px", cursor: "pointer", display: "inline-block" }}
+            aria-label="Stop"
+            onClick={handleStop}
+          />
         </div>
         <div className="project-settings">
           <input
@@ -103,11 +153,17 @@ const ProjectPage: React.FC = () => {
       >
         {content && (
           <div className="timeline-container">
+            <Playhead
+              bars={playheadPosition.bars}
+              beats={playheadPosition.beats}
+              sixteenths={playheadPosition.sixteenths}
+              totalBars={(content.sections?.length || 0) * SECTION_LENGTH_BARS}
+            />
             <div className="tracks-grid">
-              <div className="track-header-spacer timeline-spacer" style={{gridColumn: 1, gridRow: 1}}>
-              </div>
+              <div className="track-header-spacer timeline-spacer"></div>
 
               {content.tracks?.map((track) => (
+                // TODO refactor to separate Track component (requires project to be in context)
                 <React.Fragment key={track.id}>
                   <div className="track-header">
                     <div className="track-name">{track.name}</div>
@@ -154,7 +210,7 @@ const ProjectPage: React.FC = () => {
                   <div className="bar-numbers">
                     {[1, 2, 3, 4].map(bar => (
                       <span key={bar} className="bar-number">
-                        {(index * 4) + bar}
+                        {(index * SECTION_LENGTH_BARS) + bar}
                       </span>
                     ))}
                   </div>
