@@ -176,7 +176,16 @@ export class AudioEngine {
       Tone.Transport.stop();
       Tone.Transport.cancel();
       this.isPlaying = false;
-      console.log("Playback stopped");
+      
+      // Reset transport position to the beginning
+      Tone.Transport.position = "0:0:0";
+      
+      // Update the playhead display to reflect the reset position
+      if (this.playheadUpdateCallback) {
+        this.playheadUpdateCallback(0, 0, 0);
+      }
+      
+      console.log("Playback stopped and reset to beginning");
     }
   }
 
